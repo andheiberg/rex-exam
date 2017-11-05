@@ -80,21 +80,6 @@ def draw_world(est_pose, particles, world):
     cv2.circle(world, a, 5, CMAGENTA, 2)
     cv2.line(world, a, b, CMAGENTA, 2)
 
-def project_particle(p, v, w):
-    """Given a velocity and an angular velocity calculate the diff in x and y the projection would result in."""
-    theta = p.getTheta()
-    if w:
-        delta_x = - v / w * np.sin(theta) + v / w * np.sin(theta + w)
-        delta_y = v / w * np.cos(theta) - v / w * np.cos(theta + w)
-    elif theta:
-        delta_x = v * np.cos(theta)
-        delta_y = v * np.sin(theta)
-    else:
-        delta_x = v
-        delta_y = 0
-
-    return (int(delta_x), int(delta_y))
-
 ### Main program ###
 
 # Open windows
@@ -177,7 +162,7 @@ while True:
     # 1. move the particles
     # we need to calculate delta_x and delta_y. We see to page 100 and 101
     for p in particles:
-        (delta_x, delta_y) = project_particle(p, velocity, angular_velocity)
+        (delta_x, delta_y) = particle.project_particle(p, velocity, angular_velocity)
 
         particle.move_particle(p, delta_x, delta_y, angular_velocity)
 

@@ -89,7 +89,22 @@ def add_uncertainty_von_mises(particles_list, sigma, theta_kappa):
         particle.y += rn.randn(0.0, sigma)
         particle.theta = np.mod(rn.rand_von_mises (particle.theta, theta_kappa), 2.0 * np.pi) - np.pi
 
-def resample_by_weight(particles_list):
+def project_particle(p, v, w):
+    """Given a velocity and an angular velocity calculate the diff in x and y the projection would result in."""
+    theta = p.getTheta()
+    if w:
+        delta_x = - v / w * np.sin(theta) + v / w * np.sin(theta + w)
+        delta_y = v / w * np.cos(theta) - v / w * np.cos(theta + w)
+    elif theta:
+        delta_x = v * np.cos(theta)
+        delta_y = v * np.sin(theta)
+    else:
+        delta_x = v
+        delta_y = 0
+
+    return (int(delta_x), int(delta_y))
+
+def resample_by_weight(particles_list, landmark, measured_distance, measured_angle):
     new_particle_list = []
     weights = np.array([p.getWeight() for p in particles_list])
     list_idx_choices = np.random.multinomial(len(weights), weights)
