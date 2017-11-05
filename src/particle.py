@@ -1,5 +1,6 @@
 import numpy as np
 import random_numbers as rn
+import copy
 
 class Particle(object):
     """Data structure for storing particle information (state and weight)"""
@@ -80,5 +81,16 @@ def add_uncertainty_von_mises(particles_list, sigma, theta_kappa):
         particle.x += rn.randn(0.0, sigma)
         particle.y += rn.randn(0.0, sigma)
         particle.theta = np.mod(rn.rand_von_mises (particle.theta, theta_kappa), 2.0 * np.pi) - np.pi
-        
+
+def resample_by_weight(particles_list):
+    new_particle_list = []
+    weights = np.array([p.getWeight() for p in particles_list])
+    list_idx_choices = np.random.multinomial(len(weights), weights)
+    
+    for idx, count in enumerate(list_idx_choices):
+        for i in range(count):
+            # could change orientation
+            new_particle_list.append(copy.copy(particles_list[idx]))
+
+    return new_particle_list
 

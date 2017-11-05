@@ -62,6 +62,9 @@ def draw_world(est_pose, particles, world):
             y + int(-15.0*np.sin(p.getTheta()))
         )
         cv2.line(world, (x,y), b, colour, 2)
+
+        # DEBUG add weight next to particle
+        # cv2.putText(world, "%i: %f" % (idx, p.getWeight()), (x + 10, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, 255)
     
     for landmark in landmarks:
         lm_pos = (int(landmark[0]), int(ymax-landmark[1]))
@@ -90,7 +93,7 @@ def project_particle(p, v, w):
         delta_x = v
         delta_y = 0
 
-    return (delta_x, delta_y)
+    return (int(delta_x), int(delta_y))
 
 ### Main program ###
 
@@ -186,9 +189,9 @@ while True:
     angular_velocity = 0.0
 
     # Fetch next frame
-    colour, distorted = cam.get_colour()    
-    
-    
+    colour, distorted = cam.get_colour()
+
+
     # Detect objects
     objectType, measured_distance, measured_angle, colourProb = cam.get_object(colour)
     if objectType != 'none':
@@ -219,11 +222,34 @@ while True:
             print("Unknown landmark type")
             continue
 
-        # @TODO: Compute particle weights
+        # Compute particle weights
         # I would to weight the particles based on the likelihood of the distance measurement to the feature.
         # This is described in 6.6 (page 147-153)
 
-        # @TODP: Resampling
+        # For now I will just compare the deviation squared from the landmark of the particle.
+        for idx, p in enumerate(particles):
+            (delta_x, delta_y) = project_particle(p, measured_distance, measured_angle)
+            new_x = int(p.getX() + delta_x)
+            new_y = int(p.getY() + delta_y)
+            diff = np.sqrt((new_x - landmark[0]) ** 2 + (new_y - landmark[1]) ** 2)
+            p.setWeight(1 / diff if diff else 1)
+
+            # # DEBUG
+            # prev_diff = np.sqrt((p.getX() - landmark[0]) ** 2 + np.absolute(p.getY() - landmark[1]) ** 2)
+            # print("%i: x:%f y:%f new_x:%f new_y:%f w:%f prior_diff:%f diff:%f" % (idx, p.getX(), p.getY(), new_x, new_y, p.getWeight(), prev_diff, diff))
+            # cv2.line(world, (int(p.getX()), 500 - int(p.getY())), (new_x, 500 - new_y), CMAGENTA, 2)
+
+        # Normalise the particle weights
+        weight_normaliser = sum(p.getWeight() for p in particles) ** -1
+        for p in particles:
+            p.setWeight(p.getWeight() * weight_normaliser)
+
+        # # DEBUG
+        # cv2.imshow(WIN_World, world);
+        # action = cv2.waitKey(0)
+
+        # Resampling
+        particles = particle.resample_by_weight(particles)
 
         # Draw detected pattern
         cam.draw_object(colour)
