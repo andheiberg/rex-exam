@@ -21,7 +21,7 @@ CBLACK = (0, 0, 0)
 # Their orientation is their fourth value
 landmarks = [
     (100.0, 100.0, CRED, 'vertical'),
-    (100.0, 200.0, CGREEN, 'vertical'), # 200.00 => 400.0
+    (100.0, 400.0, CGREEN, 'vertical'),
     (500.0, 100.0, CGREEN, 'horizontal'),
     (500.0, 400.0, CRED, 'horizontal')
 ]
