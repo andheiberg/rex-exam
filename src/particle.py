@@ -104,6 +104,21 @@ def project_particle(p, v, w):
 
     return (int(delta_x), int(delta_y))
 
+def reweigh_particles_square_error(particles, landmark, measured_distance, measured_angle):
+    # For now I will just compare the deviation squared from the landmark of the particle.
+    for idx, p in enumerate(particles):
+        (delta_x, delta_y) = project_particle(p, measured_distance, measured_angle)
+        new_x = int(p.getX() + delta_x)
+        new_y = int(p.getY() + delta_y)
+        diff = np.sqrt((new_x - landmark[0]) ** 2 + (new_y - landmark[1]) ** 2)
+        p.setError(diff)
+        p.setWeight(1 / diff if diff else 1)
+
+        # DEBUG
+        prev_diff = np.sqrt((p.getX() - landmark[0]) ** 2 + np.absolute(p.getY() - landmark[1]) ** 2)
+        print("%i: x:%f y:%f new_x:%f new_y:%f w:%f prior_diff:%f diff:%f" % (idx, p.getX(), p.getY(), new_x, new_y, p.getWeight(), prev_diff, diff))
+        # cv2.line(world, (int(p.getX()), 500 - int(p.getY())), (new_x, 500 - new_y), CMAGENTA, 2)
+
 def resample_by_weight(particles_list, landmark, measured_distance, measured_angle):
     new_particle_list = []
     weights = np.array([p.getWeight() for p in particles_list])

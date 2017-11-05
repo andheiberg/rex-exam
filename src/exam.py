@@ -211,18 +211,12 @@ while True:
         # I would to weight the particles based on the likelihood of the distance measurement to the feature.
         # This is described in 6.6 (page 147-153)
 
-        # For now I will just compare the deviation squared from the landmark of the particle.
-        for idx, p in enumerate(particles):
-            (delta_x, delta_y) = project_particle(p, measured_distance, measured_angle)
-            new_x = int(p.getX() + delta_x)
-            new_y = int(p.getY() + delta_y)
-            diff = np.sqrt((new_x - landmark[0]) ** 2 + (new_y - landmark[1]) ** 2)
-            p.setWeight(1 / diff if diff else 1)
-
-            # # DEBUG
-            # prev_diff = np.sqrt((p.getX() - landmark[0]) ** 2 + np.absolute(p.getY() - landmark[1]) ** 2)
-            # print("%i: x:%f y:%f new_x:%f new_y:%f w:%f prior_diff:%f diff:%f" % (idx, p.getX(), p.getY(), new_x, new_y, p.getWeight(), prev_diff, diff))
-            # cv2.line(world, (int(p.getX()), 500 - int(p.getY())), (new_x, 500 - new_y), CMAGENTA, 2)
+        particle.reweigh_particles_square_error(
+            particles,
+            landmarks[foundLandmark],
+            measured_distance,
+            measured_angle
+        )
 
         # Normalise the particle weights
         weight_normaliser = sum(p.getWeight() for p in particles) ** -1
@@ -234,7 +228,12 @@ while True:
         # action = cv2.waitKey(0)
 
         # Resampling
-        particles = particle.resample_by_weight(particles)
+        particles = particle.resample_by_weight(
+            particles,
+            landmarks[foundLandmark],
+            measured_distance,
+            measured_angle
+        )
 
         # Draw detected pattern
         cam.draw_object(colour)
