@@ -10,30 +10,37 @@ class Particle(object):
         self.y = y
         self.theta = theta
         self.weight = weight
+        self.error = None
 
     def getX(self):
         return self.x
-        
-    def getY(self):
-        return self.y
-        
-    def getTheta(self):
-        return self.theta
-        
-    def getWeight(self):
-        return self.weight
 
     def setX(self, val):
         self.x = val
 
+    def getY(self):
+        return self.y
+
     def setY(self, val):
         self.y = val
+
+    def getTheta(self):
+        return self.theta
 
     def setTheta(self, val):
         self.theta = val
 
+    def getWeight(self):
+        return self.weight
+
     def setWeight(self, val):
         self.weight = val
+
+    def getError(self):
+        return self.error
+
+    def setError(self, val):
+        self.error = val
 
 
 def estimate_pose(particles_list):
