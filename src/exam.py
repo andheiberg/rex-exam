@@ -105,9 +105,16 @@ for i in range(num_particles):
 
 est_pose = particle.estimate_pose(particles) # The estimate of the robots current pose
 
+# objectType = 'vertical'|'horizontal'
+# measured_distance = float
+# measured_angle = float
+# colourProb = [float, float, float]
+simulation = ['vertical', 50.0, 0.0, [1.0, 0.0, 0.0]]
+
 # Driving parameters
 velocity = 0.0; # cm/sec
 angular_velocity = 0.0; # radians/sec
+targetLandmark = 0
 
 # Initialize the robot
 # robot = frido.Robot()
@@ -127,23 +134,25 @@ cam = camera.Camera(0, 'macbookpro', 10)
 #cam = camera.Camera(0, 'arlo')
 
 while True:
-
     # Move the robot according to user input (for testing)
     # action = cv2.waitKey(10)
+    # action = cv2.waitKey(0)
+    # 
+    # if action == ord('w'): # Forward
+    #     velocity += 4.0;
+    # elif action == ord('x'): # Backwards
+    #     velocity -= 4.0;
+    # elif action == ord('s'): # Stop
+    #     velocity = 0.0;
+    #     angular_velocity = 0.0;
+    # elif action == ord('a'): # Left
+    #     angular_velocity += 0.2;
+    # elif action == ord('d'): # Right
+    #     angular_velocity -= 0.2;
+    # elif action == ord('q'): # Quit
+    #     break
     action = cv2.waitKey(0)
-    
-    if action == ord('w'): # Forward
-        velocity += 4.0;
-    elif action == ord('x'): # Backwards
-        velocity -= 4.0;
-    elif action == ord('s'): # Stop
-        velocity = 0.0;
-        angular_velocity = 0.0;
-    elif action == ord('a'): # Left
-        angular_velocity += 0.2;
-    elif action == ord('d'): # Right
-        angular_velocity -= 0.2;
-    elif action == ord('q'): # Quit
+    if action == ord('q'): # Quit
         break
 
     # Make the robot drive
@@ -169,43 +178,40 @@ while True:
     # 2. add noise
     particle.add_uncertainty(particles, 1, 0.1)
 
-    # We reset velocities
-    velocity = 0.0
-    angular_velocity = 0.0
-
     # Fetch next frame
     colour, distorted = cam.get_colour()
 
 
     # Detect objects
     objectType, measured_distance, measured_angle, colourProb = cam.get_object(colour)
-    if objectType != 'none':
-        print("Object type = ", objectType)
-        print("Measured distance = ", measured_distance)
-        print("Measured angle = ", measured_angle)
-        print("Colour probabilities = ", colourProb)
+    objectType = simulation[0]
+    measured_distance = simulation[1]
+    measured_angle = simulation[2]
+    colourProb = simulation[3]
 
+    if objectType != 'none':
         green = colourProb[1] > colourProb[0]
-        landmark = None
+        foundLandmark = None
         if (objectType == 'horizontal'):
-            print("Landmark is horizontal")
             if green:
                 print("Landmark L3 found")
-                landmark = landmarks[2]
+                foundLandmark = 2
             else:
                 print("Landmark L4 found")
-                landmark = landmarks[3]
+                foundLandmark = 3
         elif (objectType == 'vertical'):
-            print("Landmark is vertical")
             if green:
                 print("Landmark L2 found")
-                landmark = landmarks[1]
+                foundLandmark = 1
             else:
                 print("Landmark L1 found")
-                landmark = landmarks[0]
+                foundLandmark = 0
         else:
             print("Unknown landmark type")
             continue
+
+        print("Measured distance = ", measured_distance)
+        print("Measured angle = ", measured_angle)
 
         # Compute particle weights
         # I would to weight the particles based on the likelihood of the distance measurement to the feature.
@@ -242,8 +248,50 @@ while True:
         for p in particles:
             p.setWeight(1.0/num_particles)
 
-    
     est_pose = particle.estimate_pose(particles) # The estimate of the robots current pose
+
+    if targetLandmark == 0:
+        if foundLandmark != 0:
+            angular_velocity -= 0.2
+        elif 30.0 < measured_distance:
+            velocity += 4.0
+            print("Go straight until you've visited landmark 1.")
+        else:
+            targetLandmark = 1
+            angular_velocity -= 1.4 # calculate angle
+            simulation[1] = 300
+            simulation[3] = [0.0, 1.0, 0.0]
+            print("Landmark 1 found. Trun towards landmark 2.")
+    elif targetLandmark == 1:
+        if foundLandmark != 1:
+            angular_velocity -= 0.2
+        elif 30.0 < measured_distance:
+            velocity += 4.0
+            print("Can see landmark 2. Go straight.")
+        else:
+            print("implement targetLandmark 2")
+            break
+    elif targetLandmark == 2:
+        print("implement targetLandmark 3")
+        break
+    elif targetLandmark == 3:
+        print("implement targetLandmark 4")
+        break
+    else:
+        print("dafuq")
+        break
+
+    print(velocity, angular_velocity)
+
+    # For simulation only
+    simulation[1] -= velocity
+    simulation[2] -= angular_velocity
+
+    print(simulation)
+
+    # We reset velocities
+    velocity = 0.0
+    angular_velocity = 0.0
 
     # Draw map
     draw_world(est_pose, particles, world)
