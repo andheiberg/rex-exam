@@ -20,15 +20,17 @@ CBLACK = (0, 0, 0)
 # Their colour is the third value
 # Their orientation is their fourth value
 landmarks = [
-    (0.0, 0.0, CRED, 'vertical'),
-    (0.0, 300.0, CGREEN, 'vertical'),
-    (400.0, 0.0, CBLUE, 'horizontal'),
-    (400.0, 300.0, CYELLOW, 'horizontal')
+    (100.0, 100.0, CRED, 'vertical'),
+    (100.0, 200.0, CGREEN, 'vertical'), # 200.00 => 400.0
+    (500.0, 100.0, CGREEN, 'horizontal'),
+    (500.0, 400.0, CRED, 'horizontal')
 ]
 
 def jet(x):
     """Colour map for drawing particles. This function determines the colour of 
-    a particle from its weight."""
+    a particle from its weight.
+    Red (127.5, 0, 0) being most likely.
+    Blue (0, 0, 127.5) being least likely."""
     r = (x >= 3.0/8.0 and x < 5.0/8.0) * (4.0 * x - 3.0/2.0) + (x >= 5.0/8.0 and x < 7.0/8.0) + (x >= 7.0/8.0) * (-4.0 * x + 9.0/2.0)
     g = (x >= 1.0/8.0 and x < 3.0/8.0) * (4.0 * x - 1.0/2.0) + (x >= 3.0/8.0 and x < 5.0/8.0) + (x >= 5.0/8.0 and x < 7.0/8.0) * (-4.0 * x + 7.0/2.0)
     b = (x < 1.0/8.0) * (4.0 * x + 1.0/2.0) + (x >= 1.0/8.0 and x < 3.0/8.0) + (x >= 3.0/8.0 and x < 5.0/8.0) * (-4.0 * x + 5.0/2.0)
@@ -38,12 +40,7 @@ def jet(x):
 def draw_world(est_pose, particles, world):
     """Visualization.
     This functions draws robots position in the world coordinate system."""
-    
-    
-    # Fix the origin of the coordinate system
-    offsetX = 100;
-    offsetY = 100;
-    
+        
     # Constant needed for transforming from world coordinates to screen coordinates (flip the y-axis)
     ymax = world.shape[0]
     
@@ -51,31 +48,31 @@ def draw_world(est_pose, particles, world):
     
     # Find largest weight
     max_weight = 0
-    for particle in particles:
-        max_weight = max(max_weight, particle.getWeight())
+    for p in particles:
+        max_weight = max(max_weight, p.getWeight())
 
     # Draw particles
-    for particle in particles:
-        x = int(particle.getX()) + offsetX
-        y = ymax - (int(particle.getY()) + offsetY)
-        colour = jet(particle.getWeight() / max_weight)
+    for idx, p in enumerate(particles):
+        x = int(p.getX())
+        y = ymax - int(p.getY())
+        colour = jet(p.getWeight() / max_weight)
         cv2.circle(world, (x,y), 2, colour, 2)
         b = (
-            x + int(15.0*np.cos(particle.getTheta())), 
-            y + int(-15.0*np.sin(particle.getTheta()))
+            x + int(15.0*np.cos(p.getTheta())), 
+            y + int(-15.0*np.sin(p.getTheta()))
         )
         cv2.line(world, (x,y), b, colour, 2)
     
     for landmark in landmarks:
-        lm_pos = (int(landmark[0]+offsetX), int(ymax-(landmark[1]+offsetY)))
+        lm_pos = (int(landmark[0]), int(ymax-landmark[1]))
         cv2.circle(world, lm_pos, 5, landmark[2], 2)
         cv2.putText(world, landmark[3], lm_pos, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 255)
     
     # Draw estimated robot pose
-    a = (int(est_pose.getX())+offsetX, ymax-(int(est_pose.getY())+offsetY))
+    a = (int(est_pose.getX()), ymax-int(est_pose.getY()))
     b = (
-        int(est_pose.getX() + 15.0*np.cos(est_pose.getTheta()))+offsetX, 
-        ymax - (int(est_pose.getY()) + offsetX) + int(-15.0* np.sin(est_pose.getTheta()))
+        int(est_pose.getX() + 15.0*np.cos(est_pose.getTheta())), 
+        ymax - int(est_pose.getY()) + int(-15.0* np.sin(est_pose.getTheta()))
     )
     cv2.circle(world, a, 5, CMAGENTA, 2)
     cv2.line(world, a, b, CMAGENTA, 2)
@@ -101,7 +98,7 @@ for i in range(num_particles):
     # Random starting points. (x,y) \in [-1000, 1000]^2, theta \in [-pi, pi].
     # p = particle.Particle(2000.0*np.random.ranf() - 1000, 2000.0*np.random.ranf() - 1000, 2.0*np.pi*np.random.ranf() - np.pi, 1.0/num_particles)
     # p = particle.Particle(2000.0*np.random.ranf() - 1000, 2000.0*np.random.ranf() - 1000, np.pi+3.0*np.pi/4.0, 1.0/num_particles)
-    p = particle.Particle(np.random.randint(-90, 490), np.random.randint(-90, 390), 2.0*np.pi*np.random.ranf() - np.pi, 1.0/num_particles)
+    p = particle.Particle(np.random.randint(10, 490), np.random.randint(10, 590), 2.0*np.pi*np.random.ranf() - np.pi, 1.0/num_particles)
     particles.append(p)
 
 est_pose = particle.estimate_pose(particles) # The estimate of the robots current pose
