@@ -197,10 +197,24 @@ while True:
         print("Measured angle = ", measured_angle)
         print("Colour probabilities = ", colourProb)
 
+        green = colourProb[1] > colourProb[0]
+        landmark = None
         if (objectType == 'horizontal'):
             print("Landmark is horizontal")
+            if green:
+                print("Landmark L3 found")
+                landmark = landmarks[2]
+            else:
+                print("Landmark L4 found")
+                landmark = landmarks[3]
         elif (objectType == 'vertical'):
             print("Landmark is vertical")
+            if green:
+                print("Landmark L2 found")
+                landmark = landmarks[1]
+            else:
+                print("Landmark L1 found")
+                landmark = landmarks[0]
         else:
             print("Unknown landmark type")
             continue
