@@ -129,5 +129,35 @@ def resample_by_weight(particles_list, landmark, measured_distance, measured_ang
             # could change orientation
             new_particle_list.append(copy.copy(particles_list[idx]))
 
+    np.random.shuffle(new_particle_list)
+
+    # Add random particles proportional to the mean error rate
+    # len(new_particle_list) = 600 / 300 / 5 = 0.5
+    # 300 => roughly 10%
+    # 10 => roughly 1%
+    mean_error = sum(p.getError() for p in particles_list) / len(particles_list)
+    num_random_particles = int(np.ceil(len(new_particle_list)/100.0*(0.5 + 0.07*mean_error)))
+    print("Mean error: %f, random particles: %i" % (mean_error, num_random_particles))
+    if mean_error and num_random_particles:
+        new_particle_list = new_particle_list[:-num_random_particles]
+
+        for i in range(num_random_particles):
+            # Adding random samples wasn't working great.
+            # new_particle_list.append(Particle(np.random.randint(10, 490), np.random.randint(10, 590), 2.0*np.pi*np.random.ranf() - np.pi, 1.0/num_random_particles))
+            # This will add samples from possible locations on a circle around the landmark
+            # Should be better but it's not a big improvement.
+            (x, y, theta) = sample_radius_around_landmark(landmark[0], landmark[1], measured_distance, measured_angle)
+            new_particle_list.append(Particle(x, y, theta))
+
     return new_particle_list
 
+def sample_radius_around_landmark(x, y, distance, angle):
+    r = np.random.randint(distance - 10, distance + 10)
+    theta = 2 * np.pi * np.random.random()
+
+    x = r * np.cos(theta) + x
+    y = r * np.sin(theta) + y
+    theta = np.pi - theta
+
+    print(x, y, theta)
+    return (x, y, theta)
