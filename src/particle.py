@@ -1,6 +1,7 @@
 import numpy as np
 import random_numbers as rn
 import copy
+import cv2
 
 class Particle(object):
     """Data structure for storing particle information (state and weight)"""
@@ -115,8 +116,8 @@ def reweigh_particles_square_error(particles, landmark, measured_distance, measu
         p.setWeight(1 / diff if diff else 1)
 
         # DEBUG
-        prev_diff = np.sqrt((p.getX() - landmark[0]) ** 2 + np.absolute(p.getY() - landmark[1]) ** 2)
-        print("%i: x:%f y:%f new_x:%f new_y:%f w:%f prior_diff:%f diff:%f" % (idx, p.getX(), p.getY(), new_x, new_y, p.getWeight(), prev_diff, diff))
+        # prev_diff = np.sqrt((p.getX() - landmark[0]) ** 2 + np.absolute(p.getY() - landmark[1]) ** 2)
+        # print("%i: x:%f y:%f new_x:%f new_y:%f w:%f prior_diff:%f diff:%f" % (idx, p.getX(), p.getY(), new_x, new_y, p.getWeight(), prev_diff, diff))
         # cv2.line(world, (int(p.getX()), 500 - int(p.getY())), (new_x, 500 - new_y), CMAGENTA, 2)
 
 def resample_by_weight(particles_list, landmark, measured_distance, measured_angle):
@@ -132,11 +133,10 @@ def resample_by_weight(particles_list, landmark, measured_distance, measured_ang
     np.random.shuffle(new_particle_list)
 
     # Add random particles proportional to the mean error rate
-    # len(new_particle_list) = 600 / 300 / 5 = 0.5
-    # 300 => roughly 10%
-    # 10 => roughly 1%
+    # 300 => roughly 5%
+    # 10 => roughly 0.65%
     mean_error = sum(p.getError() for p in particles_list) / len(particles_list)
-    num_random_particles = int(np.ceil(len(new_particle_list)/100.0*(0.5 + 0.07*mean_error)))
+    num_random_particles = int(np.ceil(len(new_particle_list)/100.0*(0.5 + 0.01*mean_error)))
     print("Mean error: %f, random particles: %i" % (mean_error, num_random_particles))
     if mean_error and num_random_particles:
         new_particle_list = new_particle_list[:-num_random_particles]
@@ -155,9 +155,8 @@ def sample_radius_around_landmark(x, y, distance, angle):
     r = np.random.randint(distance - 10, distance + 10)
     theta = 2 * np.pi * np.random.random()
 
-    x = r * np.cos(theta) + x
-    y = r * np.sin(theta) + y
-    theta = np.pi - theta
+    x1 = r * np.cos(theta) + x
+    y1 = r * np.sin(theta) + y
+    theta1 = np.arctan2(y-y1, x-x1)
 
-    print(x, y, theta)
-    return (x, y, theta)
+    return (x1, y1, theta1)

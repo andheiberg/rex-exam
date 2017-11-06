@@ -51,3 +51,27 @@ class Robot(object):
             sleep(turn)
 
         self.robot.stop()
+
+    def canGo(self, cm):
+        # The thinking is that it will go mostly straight.
+        # But we should account for some potential drift.
+        # Plus the robot does need some clearance (5 cm in this case)
+        sideThreshold = (5 + cm * 0.2)
+
+        if self._frontDistToCM(self.robot.read_front_ir_sensor()) < (cm * 2):
+            return False
+        elif self._rightDistToCM(self.robot.read_right_ir_sensor()) < sideThreshold:
+            return False
+        elif self._leftDistToCM(self.robot.read_left_ir_sensor()) < sideThreshold:
+            return False
+
+        return True
+
+    def _frontDistToCM(self, distance):
+        return int(round((79.943427 * (0.9953660709 ** distance))))
+
+    def _rightDistToCM(self, distance):
+        return int(round((85.60176169 * (0.995149692 ** distance))))
+
+    def _leftDistToCM(self, distance):
+        return int(round((90.5118426 * (0.9951333544 ** distance))))

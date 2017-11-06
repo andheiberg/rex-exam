@@ -65,6 +65,7 @@ def draw_world(est_pose, particles, world):
 
         # DEBUG add weight next to particle
         # cv2.putText(world, "%i: %f" % (idx, p.getWeight()), (x + 10, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, 255)
+        # cv2.putText(world, "%i" % (idx), (x + 10, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, 255)
     
     for landmark in landmarks:
         lm_pos = (int(landmark[0]), int(ymax-landmark[1]))
@@ -80,6 +81,48 @@ def draw_world(est_pose, particles, world):
     cv2.circle(world, a, 5, CMAGENTA, 2)
     cv2.line(world, a, b, CMAGENTA, 2)
 
+def move_towards_target_given_found_landmark(target, found, position):
+    """Takes (x, y) for target and found location as well as the current pose of the robot as a Particle.
+    Should return velocity and angular_velocity the robot should move in to find target.
+    """
+
+    # The vector between two points A and B is B-A = (B.x-A.x, B.y-A.y).
+    # The angle between two vectors can be calculated with the dot product or atan2.
+    path = (
+        landmarks[targetLandmark][0] - est_pose.getX(),
+        landmarks[targetLandmark][1] - est_pose.getY()
+    )
+    heading = (
+        np.cos(est_pose.getTheta()),
+        np.sin(est_pose.getTheta())
+    )
+
+    return (
+        4.0,
+        np.arctan2(path[1], path[0]) - np.arctan2(heading[1], heading[0])
+    )
+
+def move_towards_target(target, position):
+    """Takes (x, y) for target location as well as the current pose of the robot as a Particle.
+    Should return velocity and angular_velocity the robot should move in to find target.
+    """
+
+    # The vector between two points A and B is B-A = (B.x-A.x, B.y-A.y).
+    # The angle between two vectors can be calculated with the dot product or atan2.
+    path = (
+        landmarks[targetLandmark][0] - est_pose.getX(),
+        landmarks[targetLandmark][1] - est_pose.getY()
+    )
+    heading = (
+        np.cos(est_pose.getTheta()),
+        np.sin(est_pose.getTheta())
+    )
+
+    return (
+        4.0,
+        np.arctan2(path[1], path[0]) - np.arctan2(heading[1], heading[0])
+    )
+
 ### Main program ###
 
 # Open windows
@@ -92,9 +135,8 @@ cv2.namedWindow(WIN_World);
 cv2.moveWindow(WIN_World, 500, 50);
 
 
-
 # Initialize particles
-num_particles = 100
+num_particles = 1000
 particles = []
 for i in range(num_particles):
     # Random starting points. (x,y) \in [-1000, 1000]^2, theta \in [-pi, pi].
@@ -163,8 +205,18 @@ while True:
     # Radions to degree conversion is radions * 100 / pi
     # robot.turn(angular_velocity * 100 / np.pi)
 
-    # We drive in that direction (or away from the direction)
+    # We drive in that direction (but around obstacles)
+    # while not robot.canGo(velocity):
+    #     robot.turn(5)
+    # 
     # robot.go(velocity)
+
+    # Since we're currently simulating we won't move the physical robot
+    if simulation:
+        # For simulation only
+        simulation[1] -= velocity
+        simulation[2] -= angular_velocity
+    print(simulation)
 
     # Update the particles, first move then add noise
 
@@ -172,11 +224,15 @@ while True:
     # we need to calculate delta_x and delta_y. We see to page 100 and 101
     for p in particles:
         (delta_x, delta_y) = particle.project_particle(p, velocity, angular_velocity)
-
+        # print("v: %f, w:%f, dx:%f, dy:%f" % (velocity, angular_velocity, delta_x, delta_y))
         particle.move_particle(p, delta_x, delta_y, angular_velocity)
 
+    # We reset velocities
+    velocity = 0.0
+    angular_velocity = 0.0
+
     # 2. add noise
-    particle.add_uncertainty(particles, 1, 0.1)
+    particle.add_uncertainty(particles, 0.2, 0.15)
 
     # Fetch next frame
     colour, distorted = cam.get_colour()
@@ -184,27 +240,27 @@ while True:
 
     # Detect objects
     objectType, measured_distance, measured_angle, colourProb = cam.get_object(colour)
-    objectType = simulation[0]
-    measured_distance = simulation[1]
-    measured_angle = simulation[2]
-    colourProb = simulation[3]
+    
+    if simulation:
+        objectType = simulation[0]
+        measured_distance = simulation[1]
+        measured_angle = simulation[2]
+        colourProb = simulation[3]
+    else:
+        objectType = 'none'
 
+    foundLandmark = None
     if objectType != 'none':
         green = colourProb[1] > colourProb[0]
-        foundLandmark = None
         if (objectType == 'horizontal'):
             if green:
-                print("Landmark L3 found")
                 foundLandmark = 2
             else:
-                print("Landmark L4 found")
                 foundLandmark = 3
         elif (objectType == 'vertical'):
             if green:
-                print("Landmark L2 found")
                 foundLandmark = 1
             else:
-                print("Landmark L1 found")
                 foundLandmark = 0
         else:
             print("Unknown landmark type")
@@ -250,48 +306,48 @@ while True:
 
     est_pose = particle.estimate_pose(particles) # The estimate of the robots current pose
 
-    if targetLandmark == 0:
-        if foundLandmark != 0:
-            angular_velocity -= 0.2
+    if targetLandmark in [0, 1, 2, 3]:
+        if foundLandmark == None:
+            if targetLandmark == 2:
+                (velocity, angular_velocity) = move_towards_target(
+                    (landmarks[targetLandmark][0], landmarks[targetLandmark][1]),
+                    (landmarks[foundLandmark][0], landmarks[foundLandmark][1]),
+                    est_pose
+                )
+            else:
+                # For every target except for landmark 3 we have line of sight and hence it makes more sense to turn
+                # until we see the landmark. 
+                angular_velocity -= 0.2
+        if foundLandmark != targetLandmark:
+            (velocity, angular_velocity) = move_towards_target_given_found_landmark(
+                (landmarks[targetLandmark][0], landmarks[targetLandmark][1]),
+                (landmarks[foundLandmark][0], landmarks[foundLandmark][1]),
+                est_pose
+            )
         elif 30.0 < measured_distance:
             velocity += 4.0
-            print("Go straight until you've visited landmark 1.")
+            print("Can see landmark %i. Go straight." % (targetLandmark + 1))
         else:
-            targetLandmark = 1
-            angular_velocity -= 1.4 # calculate angle
-            simulation[1] = 300
-            simulation[3] = [0.0, 1.0, 0.0]
-            print("Landmark 1 found. Trun towards landmark 2.")
-    elif targetLandmark == 1:
-        if foundLandmark != 1:
-            angular_velocity -= 0.2
-        elif 30.0 < measured_distance:
-            velocity += 4.0
-            print("Can see landmark 2. Go straight.")
-        else:
-            print("implement targetLandmark 2")
-            break
-    elif targetLandmark == 2:
-        print("implement targetLandmark 3")
-        break
-    elif targetLandmark == 3:
-        print("implement targetLandmark 4")
+            targetLandmark = targetLandmark + 1
+            print("Landmark %i found. Turn towards landmark %i." % (targetLandmark, targetLandmark + 1))
+
+            if targetLandmark == 1:
+                angular_velocity -= 1.4 # calculate angle
+                simulation = ['vertical', 300.0, 0.0, [0.0, 1.0, 0.0]]
+            elif targetLandmark == 2:
+                angular_velocity -= 0.8 # calculate angle
+                # simulation = None
+                simulation = ['horizontal', 400.0, 0.0, [0.0, 1.0, 0.0]]
+            elif targetLandmark == 3:
+                angular_velocity -= 0.8 # calculate angle
+                # simulation = None
+                simulation = ['horizontal', 300.0, 0.0, [1.0, 0.0, 0.0]]
+    elif targetLandmark == 4:
+        print("Finished the race by being within 40 cm of landmark 4.")
         break
     else:
-        print("dafuq")
+        print("Unknown landmark detected. Exiting.")
         break
-
-    print(velocity, angular_velocity)
-
-    # For simulation only
-    simulation[1] -= velocity
-    simulation[2] -= angular_velocity
-
-    print(simulation)
-
-    # We reset velocities
-    velocity = 0.0
-    angular_velocity = 0.0
 
     # Draw map
     draw_world(est_pose, particles, world)
