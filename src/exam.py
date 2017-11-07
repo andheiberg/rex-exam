@@ -88,18 +88,18 @@ def move_towards_target_given_found_landmark(target, found, position):
 
     # The vector between two points A and B is B-A = (B.x-A.x, B.y-A.y).
     # The angle between two vectors can be calculated with the dot product or atan2.
-    path = (
-        landmarks[targetLandmark][0] - est_pose.getX(),
-        landmarks[targetLandmark][1] - est_pose.getY()
+    robotToFound = (
+        found[0] - position.getX(),
+        found[1] - position.getY()
     )
-    heading = (
-        np.cos(est_pose.getTheta()),
-        np.sin(est_pose.getTheta())
+    robotToTarget = (
+        target[0] - position.getX(),
+        target[1] - position.getY()
     )
 
     return (
         4.0,
-        np.arctan2(path[1], path[0]) - np.arctan2(heading[1], heading[0])
+        np.arctan2(robotToTarget[1], robotToTarget[0]) - np.arctan2(robotToFound[1], robotToFound[0])
     )
 
 def move_towards_target(target, position):
@@ -109,18 +109,18 @@ def move_towards_target(target, position):
 
     # The vector between two points A and B is B-A = (B.x-A.x, B.y-A.y).
     # The angle between two vectors can be calculated with the dot product or atan2.
-    path = (
-        landmarks[targetLandmark][0] - est_pose.getX(),
-        landmarks[targetLandmark][1] - est_pose.getY()
+    robotToTarget = (
+        target[0] - position.getX(),
+        target[1] - position.getY()
     )
-    heading = (
+    currentHeading = (
         np.cos(est_pose.getTheta()),
         np.sin(est_pose.getTheta())
     )
 
     return (
         4.0,
-        np.arctan2(path[1], path[0]) - np.arctan2(heading[1], heading[0])
+        np.arctan2(robotToTarget[1], robotToTarget[0]) - np.arctan2(currentHeading[1], currentHeading[0])
     )
 
 ### Main program ###
