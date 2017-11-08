@@ -167,7 +167,7 @@ draw_world(est_pose, particles, world)
 print("Opening and initializing camera")
 
 #cam = camera.Camera(0, 'macbookpro', 10)
-cam = camera.Camera(0, 'frindo')
+cam = camera.Camera(0, 'frindo', 50)
 #cam = camera.Camera(0, 'arlo')
 
 colour, distorted = cam.get_colour()
