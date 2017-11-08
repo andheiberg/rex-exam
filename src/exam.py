@@ -137,7 +137,7 @@ cv2.moveWindow(WIN_World, 500, 50);
 
 
 # Initialize particles
-num_particles = 1000
+num_particles = 200
 particles = []
 for i in range(num_particles):
     # Random starting points. (x,y) \in [-1000, 1000]^2, theta \in [-pi, pi].
@@ -291,7 +291,7 @@ while True:
                 est_pose
             )
         elif 30.0 < measured_distance:
-            velocity += 4.0
+            velocity += 20.0
             print("Can see landmark %i. Go straight." % (targetLandmark + 1))
         else:
             targetLandmark = targetLandmark + 1
