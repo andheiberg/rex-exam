@@ -120,7 +120,7 @@ def move_towards_target(target, position):
     )
 
     return (
-        20.0,
+        10.0,
         np.arctan2(robotToTarget[1], robotToTarget[0]) - np.arctan2(currentHeading[1], currentHeading[0])
     )
 
@@ -178,6 +178,10 @@ cam = camera.Camera(0, 'frindo', 50)
 # exit()
 
 while True:
+    action = cv2.waitKey(1)
+    if action == ord('q'): # Quit
+        break
+
     # Make the robot drive
     # Read odometry, see how far we have moved, and update particles.
     # Or use motor controls to update particles
@@ -292,7 +296,7 @@ while True:
                 est_pose
             )
         elif 30.0 < measured_distance:
-            velocity += 20.0
+            velocity += 10.0
             print("Can see landmark %i. Go straight." % (targetLandmark + 1))
         else:
             targetLandmark = targetLandmark + 1
