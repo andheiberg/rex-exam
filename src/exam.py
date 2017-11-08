@@ -170,12 +170,12 @@ print("Opening and initializing camera")
 cam = camera.Camera(0, 'frindo', 50)
 #cam = camera.Camera(0, 'arlo')
 
-colour, distorted = cam.get_colour()
-cv2.imshow(WIN_RF1, colour);
-print(colour)
+# colour, distorted = cam.get_colour()
+# cv2.imshow(WIN_RF1, colour);
+# print(colour)
 
-sleep(10)
-exit()
+# sleep(10)
+# exit()
 
 while True:
     # Make the robot drive
