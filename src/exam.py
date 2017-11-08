@@ -207,14 +207,6 @@ while True:
     # Detect objects
     objectType, measured_distance, measured_angle, colourProb = cam.get_object(colour)
     
-    if simulation:
-        objectType = simulation[0]
-        measured_distance = simulation[1]
-        measured_angle = simulation[2]
-        colourProb = simulation[3]
-    else:
-        objectType = 'none'
-
     foundLandmark = None
     if objectType != 'none':
         green = colourProb[1] > colourProb[0]
@@ -284,7 +276,7 @@ while True:
                 # For every target except for landmark 3 we have line of sight and hence it makes more sense to turn
                 # until we see the landmark. 
                 angular_velocity -= 0.2
-        if foundLandmark != targetLandmark:
+        elif foundLandmark != targetLandmark:
             (velocity, angular_velocity) = move_towards_target_given_found_landmark(
                 (landmarks[targetLandmark][0], landmarks[targetLandmark][1]),
                 (landmarks[foundLandmark][0], landmarks[foundLandmark][1]),
@@ -299,15 +291,10 @@ while True:
 
             if targetLandmark == 1:
                 angular_velocity -= 1.4 # calculate angle
-                simulation = ['vertical', 300.0, 0.0, [0.0, 1.0, 0.0]]
             elif targetLandmark == 2:
                 angular_velocity -= 0.8 # calculate angle
-                # simulation = None
-                simulation = ['horizontal', 400.0, 0.0, [0.0, 1.0, 0.0]]
             elif targetLandmark == 3:
                 angular_velocity -= 0.8 # calculate angle
-                # simulation = None
-                simulation = ['horizontal', 300.0, 0.0, [1.0, 0.0, 0.0]]
     elif targetLandmark == 4:
         print("Finished the race by being within 40 cm of landmark 4.")
         break

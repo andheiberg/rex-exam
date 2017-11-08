@@ -1,6 +1,7 @@
 # Our frido extension
 
 import robot as robotics
+from time import sleep
 
 class Robot(object):
     """Defines the Frindo robot API""" 
@@ -30,7 +31,7 @@ class Robot(object):
         self.robot.go_diff(leftSpeed, rightSpeed, direction, direction)   
         sleep(amount)
 
-        self.stop()
+        self.robot.stop()
 
     def turn(self, degrees): 
         if degrees < 0:
