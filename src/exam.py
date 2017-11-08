@@ -147,19 +147,13 @@ for i in range(num_particles):
 
 est_pose = particle.estimate_pose(particles) # The estimate of the robots current pose
 
-# objectType = 'vertical'|'horizontal'
-# measured_distance = float
-# measured_angle = float
-# colourProb = [float, float, float]
-simulation = ['vertical', 50.0, 0.0, [1.0, 0.0, 0.0]]
-
 # Driving parameters
 velocity = 0.0; # cm/sec
 angular_velocity = 0.0; # radians/sec
 targetLandmark = 0
 
 # Initialize the robot
-# robot = frido.Robot()
+robot = frido.Robot()
 
 # Allocate space for world map
 # The landmarks are 300 vertical cm's apart and 400cm horizontal cm's apart.
@@ -171,52 +165,24 @@ draw_world(est_pose, particles, world)
 
 print("Opening and initializing camera")
 
-cam = camera.Camera(0, 'macbookpro', 10)
-#cam = camera.Camera(0, 'frindo')
+#cam = camera.Camera(0, 'macbookpro', 10)
+cam = camera.Camera(0, 'frindo')
 #cam = camera.Camera(0, 'arlo')
 
 while True:
-    # Move the robot according to user input (for testing)
-    # action = cv2.waitKey(10)
-    # action = cv2.waitKey(0)
-    # 
-    # if action == ord('w'): # Forward
-    #     velocity += 4.0;
-    # elif action == ord('x'): # Backwards
-    #     velocity -= 4.0;
-    # elif action == ord('s'): # Stop
-    #     velocity = 0.0;
-    #     angular_velocity = 0.0;
-    # elif action == ord('a'): # Left
-    #     angular_velocity += 0.2;
-    # elif action == ord('d'): # Right
-    #     angular_velocity -= 0.2;
-    # elif action == ord('q'): # Quit
-    #     break
-    action = cv2.waitKey(0)
-    if action == ord('q'): # Quit
-        break
-
     # Make the robot drive
     # Read odometry, see how far we have moved, and update particles.
     # Or use motor controls to update particles
 
     # First we will turn in the direction we wish to go.
     # Radions to degree conversion is radions * 100 / pi
-    # robot.turn(angular_velocity * 100 / np.pi)
+    robot.turn(angular_velocity * 100 / np.pi)
 
     # We drive in that direction (but around obstacles)
-    # while not robot.canGo(velocity):
-    #     robot.turn(5)
-    # 
-    # robot.go(velocity)
-
-    # Since we're currently simulating we won't move the physical robot
-    if simulation:
-        # For simulation only
-        simulation[1] -= velocity
-        simulation[2] -= angular_velocity
-    print(simulation)
+    while not robot.canGo(velocity):
+        robot.turn(5)
+    
+    robot.go(velocity)
 
     # Update the particles, first move then add noise
 
