@@ -295,7 +295,7 @@ while True:
                 (landmarks[foundLandmark][0], landmarks[foundLandmark][1]),
                 est_pose
             )
-        elif 30.0 < measured_distance:
+        elif 40.0 < measured_distance:
             velocity += 10.0
             print("Can see landmark %i. Go straight." % (targetLandmark + 1))
         else:
