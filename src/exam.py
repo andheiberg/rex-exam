@@ -3,6 +3,7 @@ import camera
 import frido
 import numpy as np
 import particle
+from time import sleep
 
 # Some colors constants
 CRED = (0, 0, 255)
@@ -130,9 +131,9 @@ WIN_RF1 = "Robot view";
 cv2.namedWindow(WIN_RF1);
 cv2.moveWindow(WIN_RF1, 50, 50);
 
-# WIN_World = "World view";
-# cv2.namedWindow(WIN_World);
-# cv2.moveWindow(WIN_World, 500, 50);
+WIN_World = "World view";
+cv2.namedWindow(WIN_World);
+cv2.moveWindow(WIN_World, 500, 50);
 
 
 # Initialize particles
@@ -161,13 +162,19 @@ robot = frido.Robot()
 world = np.zeros((500,600,3), dtype=np.uint8)
 
 # Draw map
-# draw_world(est_pose, particles, world)
+draw_world(est_pose, particles, world)
 
 print("Opening and initializing camera")
 
 #cam = camera.Camera(0, 'macbookpro', 10)
 cam = camera.Camera(0, 'frindo')
 #cam = camera.Camera(0, 'arlo')
+
+colour, distorted = cam.get_colour()
+cv2.imshow(WIN_RF1, colour);
+
+sleep(10)
+exit()
 
 while True:
     # Make the robot drive
@@ -303,13 +310,13 @@ while True:
         break
 
     # Draw map
-    # draw_world(est_pose, particles, world)
+    draw_world(est_pose, particles, world)
     
     # Show frame
     cv2.imshow(WIN_RF1, colour);
 
     # Show world
-    # cv2.imshow(WIN_World, world);
+    cv2.imshow(WIN_World, world);
     
 
 # Close all windows
