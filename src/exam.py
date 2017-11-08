@@ -120,7 +120,7 @@ def move_towards_target(target, position):
     )
 
     return (
-        4.0,
+        20.0,
         np.arctan2(robotToTarget[1], robotToTarget[0]) - np.arctan2(currentHeading[1], currentHeading[0])
     )
 
@@ -184,6 +184,7 @@ while True:
 
     # First we will turn in the direction we wish to go.
     # Radions to degree conversion is radions * 100 / pi
+    print("v:%f w:%f" % (velocity, angular_velocity))
     robot.turn(angular_velocity * 100 / np.pi)
 
     # We drive in that direction (but around obstacles)
