@@ -172,6 +172,7 @@ cam = camera.Camera(0, 'frindo', 50)
 
 colour, distorted = cam.get_colour()
 cv2.imshow(WIN_RF1, colour);
+print(colour)
 
 sleep(10)
 exit()
